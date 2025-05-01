@@ -1,15 +1,9 @@
-﻿using NUnit.Framework;
+﻿using AT_PR5;
+using NUnit.Framework;
 using NUnit.Framework.Legacy;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Interactions;
 using PageObjectPattern.ContactsData;
 using PageObjectPattern.PageObjects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PageObjectPattern
 {
@@ -19,13 +13,22 @@ namespace PageObjectPattern
         [SetUp]
         public void SetUp()
         {
-
+            Logger.Instance.Debug("Set up successful");
         }
 
         [TearDown]
         public void Teardown()
         {
-            Driver.Quit();
+            try
+            {
+                Driver.Quit();
+
+                Logger.Instance.Debug("Teardown successful");
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Error("Teardown error", ex);
+            }
         }
 
         [Test]
@@ -33,14 +36,37 @@ namespace PageObjectPattern
         [TestCase("https://en.ehu.lt/", "https://en.ehu.lt/about/", "About", "About", "About")]
         public void VerifyNavigationToAboutPage(string url, string expectedUrl, string linkText, string expectedTitle, string expectedHeader)
         {
-            Driver.Instance.Navigate().GoToUrl(url);
+            Logger.Instance.InitializeTest(nameof(VerifyNavigationToAboutPage));
 
-            var homePage = new HomePage();
-            var aboutPage = homePage.NavigateToAboutPage();
+            try
+            {
+                Logger.Instance.Info($"Navigating to {url}");
+                Driver.Instance.Navigate().GoToUrl(url);
 
-            ClassicAssert.AreEqual(expectedUrl, aboutPage.GetUrl(), "URL страницы не соответствует ожидаемому");
-            ClassicAssert.AreEqual(expectedTitle, aboutPage.GetTitle(), "Заголовок страницы не соответствует ожидаемому");
-            ClassicAssert.AreEqual(expectedHeader, aboutPage.GetPageHeader(), "Заголовок контента не совпадает");
+                var homePage = new HomePage();
+                var aboutPage = homePage.NavigateToAboutPage();
+
+                Logger.Instance.Info("Checking URL");
+                ClassicAssert.AreEqual(expectedUrl, aboutPage.GetUrl(), "URL missmach");
+                Logger.Instance.Info("Checking page header");
+                ClassicAssert.AreEqual(expectedTitle, aboutPage.GetTitle(), "Page header missmach");
+                Logger.Instance.Info("Checking content header");
+                ClassicAssert.AreEqual(expectedHeader, aboutPage.GetPageHeader(), "Content header missmach");
+            }
+            catch (AssertionException ex)
+            {
+                HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                throw;
+            }
+            catch (Exception ex)
+            {
+                HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                throw;
+            }
+            finally
+            {
+                Logger.Instance.DisposeTest();
+            }
         }
 
         [Test]
@@ -48,12 +74,33 @@ namespace PageObjectPattern
         [TestCase("https://en.ehu.lt/", "study programs")]
         public void VerifySearch(string url, string searchText)
         {
-            Driver.Instance.Navigate().GoToUrl(url);
+            Logger.Instance.InitializeTest(nameof(VerifySearch));
 
-            var homePage = new HomePage();
-            var searchPage = homePage.Search(searchText);
+            try
+            {
+                Logger.Instance.Info($"Navigating to {url}");
+                Driver.Instance.Navigate().GoToUrl(url);
 
-            Assert.That(searchPage.GetUrl(), Does.Contain("/?s=study+programs"));
+                var homePage = new HomePage();
+                var searchPage = homePage.Search(searchText);
+
+                Logger.Instance.Info("Cheking search result");
+                Assert.That(searchPage.GetUrl(), Does.Contain("/?s=study+programs"));
+            }
+            catch (AssertionException ex)
+            {
+                HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                throw;
+            }
+            catch (Exception ex)
+            {
+                HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                throw;
+            }
+            finally
+            {
+                Logger.Instance.DisposeTest();
+            }
         }
 
         [Test]
@@ -66,7 +113,7 @@ namespace PageObjectPattern
             var homePage = new HomePage();
             homePage.SwitchLanguage(languageToCheck);
 
-            ClassicAssert.AreEqual(expectedUrl, homePage.GetUrl(), "URL страницы не соответствует ожидаемому");
+            ClassicAssert.AreEqual(expectedUrl, homePage.GetUrl(), "URL missmach");
         }
 
         [Test]
@@ -86,6 +133,21 @@ namespace PageObjectPattern
             var contacts = contactPage.GetContactData();
 
             Assert.That(expectedContacts.Equals(contacts), Is.True);
+        }
+
+        private void HandleTestFailure(Exception ex, string testName)
+        {
+            Logger.Instance.Error("Test failed with exception", ex);
+
+            try
+            {
+                var screenshotPath = Logger.Instance.TakeScreenshot(testName);
+                Logger.Instance.Info($"Screenshot saved: {screenshotPath}");
+            }
+            catch (Exception screenshotEx)
+            {
+                Logger.Instance.Error("Failed to capture screenshot", screenshotEx);
+            }
         }
     }
 }
