@@ -1,15 +1,15 @@
 ﻿using AT_PR5;
+using AT_PR5.Pages.PageObjects;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
-using OpenQA.Selenium;
-using PageObjectPattern.ContactsData;
-using PageObjectPattern.PageObjects;
+using AT_PR5.ContactsData;
 
 namespace PageObjectPattern
 {
     [TestFixture]
     public class Tests
     {
+
         [SetUp]
         public void SetUp()
         {
@@ -42,8 +42,9 @@ namespace PageObjectPattern
             {
                 Logger.Instance.Info($"Navigating to {url}");
                 Driver.Instance.Navigate().GoToUrl(url);
-
                 var homePage = new HomePage();
+
+                Logger.Instance.Info("Navigating to about page");
                 var aboutPage = homePage.NavigateToAboutPage();
 
                 Logger.Instance.Info("Checking URL");
@@ -55,12 +56,12 @@ namespace PageObjectPattern
             }
             catch (AssertionException ex)
             {
-                HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
                 throw;
             }
             catch (Exception ex)
             {
-                HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
                 throw;
             }
             finally
@@ -82,19 +83,21 @@ namespace PageObjectPattern
                 Driver.Instance.Navigate().GoToUrl(url);
 
                 var homePage = new HomePage();
+
+                Logger.Instance.Info("Searching using naviagation bar");
                 var searchPage = homePage.Search(searchText);
 
                 Logger.Instance.Info("Cheking search result");
-                Assert.That(searchPage.GetUrl(), Does.Contain("/?s=study+programs"));
+                Assert.That(searchPage.GetUrl(), Does.Contain("/?s=study+programs"), "Search page url does not match");
             }
             catch (AssertionException ex)
             {
-                HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                ExceptionHandler.HandleTestFailure(ex, nameof(VerifySearch));
                 throw;
             }
             catch (Exception ex)
             {
-                HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                ExceptionHandler.HandleTestFailure(ex, nameof(VerifySearch));
                 throw;
             }
             finally
@@ -108,45 +111,75 @@ namespace PageObjectPattern
         [TestCase("https://en.ehu.lt/", "https://lt.ehu.lt/", "lt")]
         public void VerifyLanguageChange(string url, string expectedUrl, string languageToCheck)
         {
-            Driver.Instance.Navigate().GoToUrl(url);
-
-            var homePage = new HomePage();
-            homePage.SwitchLanguage(languageToCheck);
-
-            ClassicAssert.AreEqual(expectedUrl, homePage.GetUrl(), "URL missmach");
-        }
-
-        [Test]
-        [Category("Navigation")]
-        [TestCase("https://en.ehu.lt/contact/", "franciskscarynacr@gmail.com", new string[] { "+370 68 771365", "+375 29 5781488" }, new string[] { "Facebook", "Telegram", "VK" })]
-        public void VerifyContactForm(string url, string email, IEnumerable<string> phones, IEnumerable<string> socials)
-        {
-            var expectedContacts = new ContactDataBuilder()
-                .WithEmail(email)
-                .WithPhones(phones)
-                .WithSocials(socials)
-                .Build();
-
-            Driver.Instance.Navigate().GoToUrl(url);
-
-            var contactPage = new ContactPage();
-            var contacts = contactPage.GetContactData();
-
-            Assert.That(expectedContacts.Equals(contacts), Is.True);
-        }
-
-        private void HandleTestFailure(Exception ex, string testName)
-        {
-            Logger.Instance.Error("Test failed with exception", ex);
+            Logger.Instance.InitializeTest(nameof(VerifyLanguageChange));
 
             try
             {
-                var screenshotPath = Logger.Instance.TakeScreenshot(testName);
-                Logger.Instance.Info($"Screenshot saved: {screenshotPath}");
+                Logger.Instance.Info($"Navigating to {url}");
+                Driver.Instance.Navigate().GoToUrl(url);
+
+                Logger.Instance.Info($"Swiching language to {languageToCheck}");
+                var homePage = new HomePage();
+                homePage.SwitchLanguage(languageToCheck);
+
+                Logger.Instance.Info("Cheking page language by URL");
+                ClassicAssert.AreEqual(expectedUrl, homePage.GetUrl(), "URL missmach");
             }
-            catch (Exception screenshotEx)
+            catch (AssertionException ex)
             {
-                Logger.Instance.Error("Failed to capture screenshot", screenshotEx);
+                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyLanguageChange));
+                throw;
+            }
+            catch (Exception ex)
+            {
+                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyLanguageChange));
+                throw;
+            }
+            finally
+            {
+                Logger.Instance.DisposeTest();
+            }
+        }
+
+        [Test]
+        [Category("Data accuracy")]
+        [TestCase("https://en.ehu.lt/contact/", "franciskscarynacr@gmail.com", new string[] { "+370 68 771365", "+375 29 5781488" }, new string[] { "Facebook", "Telegram", "VK" })]
+        public void VerifyContactForm(string url, string email, IEnumerable<string> phones, IEnumerable<string> socials)
+        {
+            Logger.Instance.InitializeTest(nameof(VerifyContactForm));
+
+            try
+            {
+                Logger.Instance.Info("Building contacts data");
+                var expectedContacts = new ContactDataBuilder()
+                    .WithEmail(email)
+                    .WithPhones(phones)
+                    .WithSocials(socials)
+                    .Build();
+
+                Logger.Instance.Info($"Navigating to {url}");
+                Driver.Instance.Navigate().GoToUrl(url);
+
+                Logger.Instance.Info("Getting contact info from the page");
+                var contactPage = new ContactPage();
+                var contacts = contactPage.GetContactData();
+
+                Logger.Instance.Info("Matching contacts data with contact info from the page");
+                Assert.That(expectedContacts.Equals(contacts), Is.True, "Contact info on page is incorrect");
+            }
+            catch (AssertionException ex)
+            {
+                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyContactForm));
+                throw;
+            }
+            catch (Exception ex)
+            {
+                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyContactForm));
+                throw;
+            }
+            finally
+            {
+                Logger.Instance.DisposeTest();
             }
         }
     }

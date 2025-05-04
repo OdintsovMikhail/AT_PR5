@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace PageObjectPattern.ContactsData
+namespace AT_PR5.ContactsData
 {
     public class ContactData
     {

@@ -1,7 +1,8 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
+using PageObjectPattern;
 
-namespace PageObjectPattern.PageObjects
+namespace AT_PR5.Pages.PageObjects
 {
     public abstract class BasePage
     {

@@ -1,7 +1,7 @@
 ﻿using OpenQA.Selenium;
-using PageObjectPattern.ContactsData;
+using AT_PR5.ContactsData;
 
-namespace PageObjectPattern.PageObjects
+namespace AT_PR5.Pages.PageObjects
 {
     public class ContactPage : BasePage
     {
@@ -9,6 +9,10 @@ namespace PageObjectPattern.PageObjects
         private By phoneLtElement = By.XPath("//li[strong[contains(text(), 'LT')]]");
         private By phoneByElement = By.XPath("//li[strong[contains(text(), 'BY')]]");
         private By socialsElement = By.XPath("//li[strong[contains(text(), 'social')]]//a");
+
+        public ContactPage()
+        {
+        }
 
         public ContactData GetContactData()
         {

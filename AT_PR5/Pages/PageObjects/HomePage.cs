@@ -1,6 +1,6 @@
 ﻿using OpenQA.Selenium;
 
-namespace PageObjectPattern.PageObjects
+namespace AT_PR5.Pages.PageObjects
 {
     public class HomePage : BasePage
     {
@@ -10,6 +10,11 @@ namespace PageObjectPattern.PageObjects
         private By searchBar = By.Name("s");
 
         private By languageDropdownMenu = By.ClassName("language-switcher");
+
+        public HomePage()
+        {
+        }
+
 
         public AboutPage NavigateToAboutPage()
         {
