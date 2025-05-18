@@ -1,4 +1,5 @@
-﻿using OpenQA.Selenium;
+﻿using AventStack.ExtentReports;
+using OpenQA.Selenium;
 using PageObjectPattern;
 using Serilog;
 using Serilog.Sinks.File.Archive;
@@ -11,7 +12,7 @@ namespace AT_PR5
     {
         private static Logger _instance;
         private ILogger _logger;
-        private static object syncRoot = new Object();
+        private ExtentTest? _report;
 
         private ILogger basicLogger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
@@ -34,20 +35,17 @@ namespace AT_PR5
         {
             get
             {
-                if (_instance == null)
+                if (_instance is null)
                 {
-                    lock (syncRoot)
-                    {
-                        if (_instance == null)
-                            _instance = new Logger();
-                    }
+                    _instance = new Logger();
                 }
                 return _instance;
             }
         }
 
-        public void InitializeTest(string testName)
+        public void InitializeTest(ExtentTest test)
         {
+            string testName = test.Test.Name;
             var testRunId = Guid.NewGuid();
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             var logFileName = $"logs/{testName}_{timestamp}_{testRunId}.log";
@@ -71,6 +69,8 @@ namespace AT_PR5
             Debug($"Evironment: OS={Environment.OSVersion}, User={Environment.UserName}");
 
             _logger.Debug($"Logger initialized for test {testName}, ID: {testRunId}", testName, testRunId);
+
+            _report = test;
         }
 
         public void DisposeTest()
@@ -81,16 +81,25 @@ namespace AT_PR5
             ArchiveAndCleanup("Logs", "Logs/Archive", maxFilesToKeep: 10);
 
             _logger = basicLogger;
+            _report = null;
         }
 
         public void Info(string message)
         {
             _logger.Information(message);
+            if (_report is not null)
+            {
+                _report.Info(message);
+            }
         }
 
         public void Error(string message, Exception ex = null)
         {
             _logger.Error(ex, message);
+            if (_report is not null)
+            {
+                _report.Fail(message + ex.ToString());
+            }
         }
 
         public void Debug(string message)
@@ -101,6 +110,10 @@ namespace AT_PR5
         public void Warning(string message)
         {
             _logger.Warning(message);
+            if (_report is not null)
+            {
+                _report.Warning(message);
+            }
         }
 
         public string TakeScreenshot(string testName)

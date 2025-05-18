@@ -24,6 +24,7 @@ namespace PageObjectPattern
                     options.AddArgument("--start-maximized");
                     _instance = new ChromeDriver(options);
                 }
+
                 return _instance;
             }
         }

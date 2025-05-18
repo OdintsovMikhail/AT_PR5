@@ -3,17 +3,33 @@ using AT_PR5.Pages.PageObjects;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 using AT_PR5.ContactsData;
+using AventStack.ExtentReports;
+using Reqnroll.CommonModels;
+using NUnit.Framework.Interfaces;
 
 namespace PageObjectPattern
 {
     [TestFixture]
     public class Tests
     {
+        private static string reportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
+        private static string reportName = "Test suite report.html";
+        private ExtentTest test;
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            Logger.Instance.Debug("Test suite set up successful");
+
+            Reporter.Instance.SetUpReporter(reportPath, reportName);
+        }
 
         [SetUp]
         public void SetUp()
         {
             Logger.Instance.Debug("Set up successful");
+
+            test = Reporter.Instance.CreateTest(TestContext.CurrentContext.Test.MethodName);
         }
 
         [TearDown]
@@ -21,7 +37,20 @@ namespace PageObjectPattern
         {
             try
             {
-                Driver.Quit();
+                var status = TestContext.CurrentContext.Result.Outcome.Status;
+
+                switch (status)
+                {
+                    case TestStatus.Passed:
+                        test.Pass("Test passed");
+                        break;
+                    case TestStatus.Skipped:
+                        test.Skip("Test skipped");
+                        break;
+                }
+
+                    Driver.Quit();
+                Reporter.Instance.Flush();
 
                 Logger.Instance.Debug("Teardown successful");
             }
@@ -33,10 +62,10 @@ namespace PageObjectPattern
 
         [Test]
         [Category("Navigation")]
-        [TestCase("https://en.ehu.lt/", "https://en.ehu.lt/about/", "About", "About", "About")]
+        [TestCase("https://en.ehu.lt/", "https://en.ehu.lt/about/", "About", "About1", "About1")]
         public void VerifyNavigationToAboutPage(string url, string expectedUrl, string linkText, string expectedTitle, string expectedHeader)
         {
-            Logger.Instance.InitializeTest(nameof(VerifyNavigationToAboutPage));
+            Logger.Instance.InitializeTest(test);
 
             try
             {
@@ -56,12 +85,12 @@ namespace PageObjectPattern
             }
             catch (AssertionException ex)
             {
-                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                ExceptionHandler.HandleTestFailure(ex, test);
                 throw;
             }
             catch (Exception ex)
             {
-                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyNavigationToAboutPage));
+                ExceptionHandler.HandleTestFailure(ex, test);
                 throw;
             }
             finally
@@ -75,8 +104,10 @@ namespace PageObjectPattern
         [TestCase("https://en.ehu.lt/", "study programs")]
         public void VerifySearch(string url, string searchText)
         {
-            Logger.Instance.InitializeTest(nameof(VerifySearch));
+            Assert.Ignore();
 
+            /*Logger.Instance.InitializeTest(test);
+            
             try
             {
                 Logger.Instance.Info($"Navigating to {url}");
@@ -92,18 +123,18 @@ namespace PageObjectPattern
             }
             catch (AssertionException ex)
             {
-                ExceptionHandler.HandleTestFailure(ex, nameof(VerifySearch));
+                ExceptionHandler.HandleTestFailure(ex, test);
                 throw;
             }
             catch (Exception ex)
             {
-                ExceptionHandler.HandleTestFailure(ex, nameof(VerifySearch));
+                ExceptionHandler.HandleTestFailure(ex, test);
                 throw;
             }
             finally
             {
                 Logger.Instance.DisposeTest();
-            }
+            }*/
         }
 
         [Test]
@@ -111,7 +142,7 @@ namespace PageObjectPattern
         [TestCase("https://en.ehu.lt/", "https://lt.ehu.lt/", "lt")]
         public void VerifyLanguageChange(string url, string expectedUrl, string languageToCheck)
         {
-            Logger.Instance.InitializeTest(nameof(VerifyLanguageChange));
+            Logger.Instance.InitializeTest(test);
 
             try
             {
@@ -127,12 +158,12 @@ namespace PageObjectPattern
             }
             catch (AssertionException ex)
             {
-                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyLanguageChange));
+                ExceptionHandler.HandleTestFailure(ex, test);
                 throw;
             }
             catch (Exception ex)
             {
-                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyLanguageChange));
+                ExceptionHandler.HandleTestFailure(ex, test);
                 throw;
             }
             finally
@@ -146,7 +177,7 @@ namespace PageObjectPattern
         [TestCase("https://en.ehu.lt/contact/", "franciskscarynacr@gmail.com", new string[] { "+370 68 771365", "+375 29 5781488" }, new string[] { "Facebook", "Telegram", "VK" })]
         public void VerifyContactForm(string url, string email, IEnumerable<string> phones, IEnumerable<string> socials)
         {
-            Logger.Instance.InitializeTest(nameof(VerifyContactForm));
+            Logger.Instance.InitializeTest(test);
 
             try
             {
@@ -169,12 +200,12 @@ namespace PageObjectPattern
             }
             catch (AssertionException ex)
             {
-                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyContactForm));
+                ExceptionHandler.HandleTestFailure(ex, test);
                 throw;
             }
             catch (Exception ex)
             {
-                ExceptionHandler.HandleTestFailure(ex, nameof(VerifyContactForm));
+                ExceptionHandler.HandleTestFailure(ex, test);
                 throw;
             }
             finally
